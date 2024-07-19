@@ -12,6 +12,7 @@ import Fab from '@mui/material/Fab';
 import MenuIcon from '@mui/icons-material/Menu';
 import LoginIcon from '@mui/icons-material/login';
 import LogoutIcon from '@mui/icons-material/logout';
+import Link from 'next/link';
 
 type Anchor = 'left';
 
@@ -34,6 +35,7 @@ export default function AnchorTemporaryDrawer() {
       setState({ ...state, [anchor]: open });
     };
 
+  
   const list = (anchor: Anchor) => (
     <Box
       sx={{ width: 250 }}
@@ -43,15 +45,19 @@ export default function AnchorTemporaryDrawer() {
     >
       <List>
         {['Sign up', 'Log in', 'Log out'].map((text, index) => (
-          <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                {index === 0 ? <AccountIcon /> : index === 1 ? <LoginIcon /> : <LogoutIcon />}
-              </ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+          <Link href={index === 0 ? '/signup' : index === 1 ? '/login' : '/logout'} legacyBehavior key={text}>
+            <a style={{ textDecoration: 'none', color: 'inherit' }}>
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    {index === 0 ? <AccountIcon /> : index === 1 ? <LoginIcon /> : <LogoutIcon />}
+                  </ListItemIcon>
+                  <ListItemText primary={text} />
+                </ListItemButton>
+              </ListItem>
+            </a>
+          </Link>
+      ))}
       </List>
     </Box>
   );
@@ -61,7 +67,7 @@ export default function AnchorTemporaryDrawer() {
       {(['left'] as const).map((anchor) => (
         <React.Fragment key={anchor}>
           <Box sx={{marginTop: 1, marginLeft: 1}}>
-            <Fab onClick={toggleDrawer(anchor, true)}>
+            <Fab onClick={toggleDrawer(anchor, true)} color='primary'>
               <MenuIcon />
             </Fab>
           </Box>
@@ -69,6 +75,9 @@ export default function AnchorTemporaryDrawer() {
             anchor={anchor}
             open={state[anchor]}
             onClose={toggleDrawer(anchor, false)}
+            sx={{
+              '& .MuiPaper-root' : { backgroundColor: '#00838f'}
+            }}
           >
             {list(anchor)}
           </Drawer>
