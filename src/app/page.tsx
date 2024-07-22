@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import SideMenu from "../components/SideMenu";
 
 export const metadata : Metadata = {
-  title: 'Todo-list',
+  title: 'Todo-List',
 }
 
 export default function Home() {
