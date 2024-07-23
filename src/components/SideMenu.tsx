@@ -12,11 +12,18 @@ import Fab from '@mui/material/Fab';
 import MenuIcon from '@mui/icons-material/Menu';
 import LoginIcon from '@mui/icons-material/login';
 import LogoutIcon from '@mui/icons-material/logout';
-import Link from 'next/link';
+import { useAuthState } from "react-firebase-hooks/auth";
+import { firebaseAuth } from "../firebase/config";
+import { useRouter } from "next/navigation";
+import { signOut } from 'firebase/auth';
 
 type Anchor = 'left';
 
 export default function AnchorTemporaryDrawer() {
+
+  const [ user ] = useAuthState(firebaseAuth);
+  const router = useRouter();
+
   const [state, setState] = React.useState({
     left: false,
   });
@@ -44,29 +51,45 @@ export default function AnchorTemporaryDrawer() {
       onKeyDown={toggleDrawer(anchor, false)}
     >
       <List>
-        {['Sign up', 'Log in', 'Log out'].map((text, index) => (
-          <Link href={index === 0 ? '/signup' : index === 1 ? '/login' : '/logout'} legacyBehavior key={text}>
-            <a style={{ textDecoration: 'none', color: 'inherit' }}>
+      {!user && (
+            <>
               <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>
-                    {index === 0 ? <AccountIcon /> : index === 1 ? <LoginIcon /> : <LogoutIcon />}
-                  </ListItemIcon>
-                  <ListItemText primary={text} />
-                </ListItemButton>
+                  <ListItemButton onClick={() => router.push('/signup')}>
+                      <ListItemIcon>
+                          <AccountIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Sign up" />
+                  </ListItemButton>
               </ListItem>
-            </a>
-          </Link>
-      ))}
+              <ListItem disablePadding>
+                  <ListItemButton onClick={() => router.push('/login')}>
+                      <ListItemIcon>
+                          <LoginIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Log in" />
+                  </ListItemButton>
+              </ListItem>
+            </>
+            )}
+            {user && (
+                <ListItem disablePadding>
+                    <ListItemButton onClick={() => signOut(firebaseAuth)}>
+                        <ListItemIcon>
+                            <LogoutIcon />
+                        </ListItemIcon>
+                        <ListItemText primary="Log out" />
+                    </ListItemButton>
+                </ListItem>
+            )}
       </List>
     </Box>
   );
 
   return (
-    <div>
+    <Box sx={{marginTop: 1, marginLeft: 1, width: 56}}>
       {(['left'] as const).map((anchor) => (
         <React.Fragment key={anchor}>
-          <Box sx={{marginTop: 1, marginLeft: 1}}>
+          <Box>
             <Fab onClick={toggleDrawer(anchor, true)} color='primary'>
               <MenuIcon />
             </Fab>
@@ -83,6 +106,6 @@ export default function AnchorTemporaryDrawer() {
           </Drawer>
         </React.Fragment>
       ))}
-    </div>
+    </Box>
   );
 }

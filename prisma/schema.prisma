@@ -13,6 +13,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id Int @id @default(autoincrement())
+model Task {
+  id          Int       @id   @default(autoincrement())
+  title       String
+  description String
 }

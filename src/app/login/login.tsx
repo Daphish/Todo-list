@@ -4,15 +4,26 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import { Container, Stack, Typography, Divider, Button } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth'
+import { useSignInWithEmailAndPassword, useAuthState } from 'react-firebase-hooks/auth'
 import { firebaseAuth } from '@/src/firebase/config';
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
   
+    const router = useRouter()
+    const [ user, loading ] = useAuthState(firebaseAuth)
+
+    useEffect(() => {
+        if (user) {
+            router.push('/');
+        }
+    }, [user]);
+
     const [ email, setEmail ] = useState<string>('');
     const [ password, setPassword ] = useState<string>('');
+    const [ found, setFound ] = useState<boolean>(true);
 
     const [ SignInWithEmailAndPassword ] = useSignInWithEmailAndPassword(firebaseAuth)
     
@@ -20,6 +31,16 @@ export default function Login() {
         try{
 
             const res = await SignInWithEmailAndPassword(email, password);
+            if(typeof res === 'undefined'){
+                setFound(false);
+
+                setTimeout(() => {
+                    setFound(true);
+                }, 3000);
+            }
+            else{
+                router.push('/')
+            }
             setEmail('');
             setPassword('');
         } catch(e){
@@ -29,6 +50,11 @@ export default function Login() {
   
     const disabled = !email || !password || password.length < 6;
 
+    if(loading){
+        <></>
+    }
+
+    if(!user){
     return (
     <>
         <Container maxWidth="sm">
@@ -103,7 +129,20 @@ export default function Login() {
                     </Button>
                 </Stack>
             </Box>
+            {!found && 
+            <Box
+            component='div'
+            sx={{
+                backgroundColor: '#d50000',
+                border: '1px solid black',
+                p: 1,
+                borderRadius: 1,
+            }}
+            >
+                <Typography align='center'>Datos incorrectos, intente de nuevo</Typography>
+            </Box> 
+        }
         </Container>
     </>
-  );
+  );}
 }
