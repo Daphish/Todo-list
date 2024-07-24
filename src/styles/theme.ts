@@ -1,7 +1,7 @@
 "use client";
 import { Montserrat } from "next/font/google";
-import { createTheme } from "@mui/material/styles";
-import { cyan } from "@mui/material/colors"; 
+import { createTheme, responsiveFontSizes } from "@mui/material/styles";
+import { green } from "@mui/material/colors"; 
 
 const montserrat = Montserrat({
     weight: ["300", "400", "500", "700"],
@@ -9,19 +9,21 @@ const montserrat = Montserrat({
     display: "swap",
 });
 
-const theme = createTheme({
+let theme = createTheme({
     typography: {
         fontFamily: montserrat.style.fontFamily,
     },
     palette: {
         mode: "dark",
         primary: {
-            main: cyan[200],
+            main: green[300],
         },
         secondary: {
-            main: cyan[800],
+            main: green[900],
         },
     },
 });
+
+theme=responsiveFontSizes(theme);
 
 export default theme;

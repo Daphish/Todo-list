@@ -12,14 +12,11 @@ export default function Home() {
   return (
     <>
       <Grid container spacing={2}>
-        <Grid item xs={1}>
+        <Grid item xs={12} md='auto'>
           <SideMenu />
         </Grid>
-        <Grid item xs={10}>
+        <Grid item xs={12} md={10} lg={11}>
           <MainContainer />
-        </Grid>
-        <Grid item xs={1}>
-          <RightContainer />
         </Grid>
       </Grid>
     </>

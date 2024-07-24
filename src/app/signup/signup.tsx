@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
-import { Container, Stack, Typography, Divider, Button } from '@mui/material';
+import { Container, Stack, Typography, Divider, Button, CircularProgress } from '@mui/material';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCreateUserWithEmailAndPassword, useSignInWithEmailAndPassword, useAuthState } from 'react-firebase-hooks/auth'
@@ -53,7 +53,19 @@ export default function Signup() {
     const disabled = !email || !password || password.length < 6;
 
     if(loading){
-        return <></>
+        return (
+            <Box sx={{
+                height: '100vh',
+                width: '100vw',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                <Box>
+                    <CircularProgress color='primary'></CircularProgress>
+                </Box>
+            </Box>
+        )
     }
 
     if(!user){

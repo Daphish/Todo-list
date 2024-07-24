@@ -1,7 +1,8 @@
+import { Box } from '@mui/material'
 import React from 'react'
 
 export default function RightContainer() {
   return (
-    <div>RightContainer</div>
+    <Box>RIghtContainer</Box>
   )
 }

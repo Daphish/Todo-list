@@ -90,7 +90,7 @@ export default function AnchorTemporaryDrawer() {
       {(['left'] as const).map((anchor) => (
         <React.Fragment key={anchor}>
           <Box>
-            <Fab onClick={toggleDrawer(anchor, true)} color='primary'>
+            <Fab onClick={toggleDrawer(anchor, true)} color='secondary'>
               <MenuIcon />
             </Fab>
           </Box>
@@ -99,7 +99,7 @@ export default function AnchorTemporaryDrawer() {
             open={state[anchor]}
             onClose={toggleDrawer(anchor, false)}
             sx={{
-              '& .MuiPaper-root' : { backgroundColor: '#00838f'}
+              '& .MuiPaper-root' : { backgroundColor: '#002803'}
             }}
           >
             {list(anchor)}
