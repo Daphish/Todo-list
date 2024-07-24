@@ -2,13 +2,17 @@ import { Metadata } from "next";
 import { Grid } from "@mui/material";
 import SideMenu from "../components/SideMenu";
 import MainContainer from "../components/MainContainer";
-import RightContainer from "../components/RightContainer";
+import dayjs from "dayjs";
+
 
 export const metadata : Metadata = {
   title: 'Todo-List',
 }
 
 export default function Home() {
+  
+  dayjs.locale('es')
+
   return (
     <>
       <Grid container spacing={2}>

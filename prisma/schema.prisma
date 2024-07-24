@@ -17,4 +17,7 @@ model Task {
   id          Int       @id   @default(autoincrement())
   title       String
   description String
+  deadline    String?
+  state       Boolean   @default(false)
+  userId      String    @unique
 }

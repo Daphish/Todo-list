@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prismaDev": "dotenv -e .env.local prisma migrate dev ",
+    "prismaStud": "dotenv -e .env.local prisma studio"
   },
   "dependencies": {
     "@emotion/cache": "^11.11.0",
