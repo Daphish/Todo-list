@@ -1,20 +1,21 @@
-import { Metadata } from "next";
+'use client'
+import { useEffect } from 'react';
+import Head from 'next/head';
 import { Grid } from "@mui/material";
 import SideMenu from "../components/SideMenu";
 import MainContainer from "../components/MainContainer";
-import dayjs from "dayjs";
-
-
-export const metadata : Metadata = {
-  title: 'Todo-List',
-}
 
 export default function Home() {
-  
-  dayjs.locale('es')
 
+  useEffect(() => {
+    document.title = 'Todo-List';
+  }, []);
+  
   return (
     <>
+      <Head>
+        <title>Todo-List</title>
+      </Head>
       <Grid container spacing={2}>
         <Grid item xs={12} md='auto'>
           <SideMenu />

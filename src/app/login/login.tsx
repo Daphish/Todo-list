@@ -84,7 +84,7 @@ export default function Login() {
             noValidate
             autoComplete="off"
             >
-                <Typography variant="h2" sx={{textAlign: 'center', marginBottom: 2}}>
+                <Typography variant="h2" color={'primary'} sx={{textAlign: 'center', marginBottom: 2}}>
                     Inicio de sesión
                 </Typography>
                 <div>
@@ -126,12 +126,14 @@ export default function Login() {
                         disabled={disabled}
                         onClick={handleSignIn}
                         size='large'
+                        sx={{textTransform: 'none', fontSize: '1rem'}}
                     >
                         Iniciar Sesión
                     </Button>
                     <Button
                         variant="contained"
                         size='large'
+                        sx={{textTransform: 'none', fontSize: '1rem'}}
                     >
                         <Link legacyBehavior href="/">
                             <a style={{ textDecoration: 'none', color: 'inherit' }}>

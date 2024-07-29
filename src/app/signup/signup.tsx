@@ -85,7 +85,7 @@ export default function Signup() {
         noValidate
         autoComplete="off"
         >
-            <Typography variant="h2" sx={{textAlign: 'center', marginBottom: 2}}>
+            <Typography variant="h2" color={'primary'} sx={{textAlign: 'center', marginBottom: 2}}>
                 Regístrate
             </Typography>
             <div>
@@ -129,12 +129,14 @@ export default function Signup() {
                     disabled={disabled}
                     onClick={handleSignUp}
                     size='large'
+                    sx={{textTransform: 'none', fontSize: '1rem'}}
                 >
                     Registrarse
                 </Button>
                 <Button
                     variant="contained"
                     size='large'
+                    sx={{textTransform: 'none', fontSize: '1rem'}}
                 >
                     <Link legacyBehavior href="/">
                         <a style={{ textDecoration: 'none', color: 'inherit' }}>

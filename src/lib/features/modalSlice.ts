@@ -1,7 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
+import type { Task } from '@/src/styles/types'
 
-const initialState = {
-    value: false
+const initialState : Task = {
+    value: false,
+    name: '',
+    description: '',
+    deadline: '',
+    taskState: true,
+    id: ''
 }
 
 export const modalSlice = createSlice({

@@ -1,6 +1,5 @@
-'use client'
 import * as React from 'react'
-import { CircularProgress, Box, Typography, Stack, Fab } from "@mui/material"
+import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions } from "@mui/material"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseAuth } from "../firebase/config";
 import ToggleButton from '@mui/material/ToggleButton';
@@ -9,17 +8,23 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Titulo from "./Titulo";
 import {useAppDispatch, useAppSelector} from '../lib/hooks'
 import { show, unshow } from '../lib/features/modalSlice'
+import { Task } from '../styles/types';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import 'dayjs/locale/en-gb';
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 export default function MainContainer() {
 
-  const value = useAppSelector((state) => state.modal.value);
+  const initialTask : Task = useAppSelector((state) => state.modal);
   const dispatch = useAppDispatch();
   const [ user, loading ] = useAuthState(firebaseAuth);
   const [filter, setFilter] = React.useState<string | null>('pending');
   const [order, setOrder] = React.useState<string | null>('asc')
 
   function handleModal() {
-    value === true ? show() : unshow();
+    initialTask.value === true ? dispatch(unshow()) : dispatch(show());
   }
 
   const handleFilter = (
@@ -122,17 +127,61 @@ export default function MainContainer() {
                 aria-label="task order"
               >
                 <ToggleButton value="asc" aria-label="asc order" sx={{ textTransform: 'none' }}>Ascendente</ToggleButton>
-                <ToggleButton value="desc" aria-label="desc order" sx={{ textTransform: 'none' }}>Descendiente</ToggleButton>
+                <ToggleButton value="desc" aria-label="desc order" sx={{ textTransform: 'none' }}>Descendente</ToggleButton>
               </ToggleButtonGroup>
             </Stack>
           </Stack>
-          <Fab color='secondary'>
-            <AddCircleIcon />
-          </Fab>
+          <Box
+            sx={{
+              height : 1,
+              width : 1,
+              justifyContent: 'center',
+              display: 'flex',
+              mt: 5
+            }}
+          >
+            <Fab onClick={handleModal} color='secondary'>
+              <AddCircleIcon />
+            </Fab>
+          </Box>
           <Typography variant= 'h5' align= 'center' sx={{margin: 2}}>
-            Inicia sesión para empezar a agregar tus tareas.
+            No hay ninguna tarea pendiente.
           </Typography>
       </Box>
+      <Dialog
+        open={initialTask.value}
+        onClose={handleModal}
+      >
+        <DialogTitle color={"primary"} sx={{ textAlign: 'center'}}>Nueva Tarea</DialogTitle>
+        <DialogContent dividers sx={{'& .MuiFormControl-root': {mt: 1}}}>
+          <TextField
+            required
+            id="taskName"
+            label="Nombre de la tarea"
+            fullWidth
+            color="primary"
+            variant='outlined'
+          />
+          <TextField
+            required
+            id="taskDescription"
+            label="Descripción de la tarea"
+            fullWidth
+            color="primary"
+            variant='outlined'
+            multiline
+          />
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
+            <DemoContainer components={['DatePicker']}>
+              <DatePicker label="Día límite" />
+            </DemoContainer>
+          </LocalizationProvider>
+        </DialogContent>
+        <DialogActions sx={{display: 'flex', justifyContent: "space-around"}}>
+          <Button variant='contained' sx={{textTransform: 'none', fontSize: '1rem'}}>Agregar tarea</Button>
+          <Button onClick={handleModal} variant='contained' sx={{textTransform: 'none', fontSize: '1rem'}}>Cancelar</Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }
