@@ -1,8 +1,11 @@
 export type Task = {
-    value: boolean;
-    name: string;
+    title: string;
     description: string;
-    deadline: string;
-    taskState: boolean;
-    id: string;
+    deadline: string | null;
+    state: 'Completada' | 'Pendiente';
+    userId: string;
+}
+
+export type Taskdb = Task & {
+    id: number;
 }

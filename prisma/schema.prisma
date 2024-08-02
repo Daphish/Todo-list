@@ -13,11 +13,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TaskState {
+  Completada
+  Pendiente
+}
+
 model Task {
-  id          Int       @id   @default(autoincrement())
   title       String
   description String
   deadline    String?
-  state       Boolean   @default(false)
+  state       TaskState
   userId      String    @unique
+  id          Int       @id   @default(autoincrement())
 }

@@ -8,24 +8,66 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Titulo from "./Titulo";
 import {useAppDispatch, useAppSelector} from '../lib/hooks'
 import { show, unshow } from '../lib/features/modalSlice'
-import { Task } from '../styles/types';
+import { addTask, finish } from '../lib/features/taskSlice'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-gb';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { useState, useEffect } from 'react';
+import { Task } from '../styles/types';
 
 export default function MainContainer() {
 
-  const initialTask : Task = useAppSelector((state) => state.modal);
+  const value = useAppSelector((state) => state.modal.value);
+  const taskState = useAppSelector ((state) => state.task);
   const dispatch = useAppDispatch();
   const [ user, loading ] = useAuthState(firebaseAuth);
-  const [filter, setFilter] = React.useState<string | null>('pending');
-  const [order, setOrder] = React.useState<string | null>('asc')
+  const [ filter, setFilter] = React.useState<string | null>('pending');
+  const [ order, setOrder ] = React.useState<string | null>('asc')
+  const [ taskName, setTaskName ] = useState('');
+  const [ taskDescription, setTaskDescription ] = useState('');
+  const [ taskDue, setTaskDue ] = useState('Sin fecha límite');
+  const [ addErr, setAddErr ] = useState<boolean>(false);
+  const [ addErr2, setAddErr2 ] = useState<boolean>(false);
 
   function handleModal() {
-    initialTask.value === true ? dispatch(unshow()) : dispatch(show());
+    value === true ? dispatch(unshow()) : dispatch(show());
   }
+
+  function handleAddTask() {
+    if(taskName && taskDescription){
+      const newTask : Task = {
+        title: taskName,
+        description: taskDescription,
+        deadline: taskDue,
+        state: 'Pendiente',
+        userId: user!.uid,
+      }
+      dispatch(addTask(newTask));
+      setTaskName('');
+      setTaskDescription('');
+      setTaskDue('Sin fecha límite');
+      if(taskState.finished){
+        handleModal();
+        dispatch(finish());
+      }
+    } else {
+      setAddErr(true);
+      setTimeout(() => {
+        setAddErr(false);
+      }, 3000);
+    }
+  }
+
+  useEffect(() => {
+    if (!taskState.loading && taskState.error) {
+      setAddErr2(true);
+      setTimeout(() => {
+        setAddErr2(false);
+      }, 3000);
+    }
+  }, [taskState.loading, taskState.error]);
 
   const handleFilter = (
     event: React.MouseEvent<HTMLElement>,
@@ -149,7 +191,7 @@ export default function MainContainer() {
           </Typography>
       </Box>
       <Dialog
-        open={initialTask.value}
+        open={value}
         onClose={handleModal}
       >
         <DialogTitle color={"primary"} sx={{ textAlign: 'center'}}>Nueva Tarea</DialogTitle>
@@ -161,6 +203,7 @@ export default function MainContainer() {
             fullWidth
             color="primary"
             variant='outlined'
+            onChange={(e) => setTaskName(e.target.value)}
           />
           <TextField
             required
@@ -170,15 +213,51 @@ export default function MainContainer() {
             color="primary"
             variant='outlined'
             multiline
+            onChange={(e) => setTaskDescription(e.target.value)}
           />
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
             <DemoContainer components={['DatePicker']}>
-              <DatePicker label="Día límite" />
+              <DatePicker label="Día límite" onChange={(e) => setTaskDue(e!.format('DD/MM/YYYY'))}/>
             </DemoContainer>
           </LocalizationProvider>
+          {addErr &&
+            <Box
+            component='div'
+            sx={{
+              backgroundColor: '#d50000',
+              border: '1px solid black',
+              p: 1,
+              borderRadius: 1,
+            }}
+            >
+              <Typography align='center'>'Datos incompletos'</Typography>
+            </Box>
+          }
+          {taskState.loading &&
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContet: 'center'
+            }}>
+              <CircularProgress color='primary'></CircularProgress>
+            </Box>
+          }
+          {addErr2 &&
+            <Box
+            component='div'
+            sx={{
+              backgroundColor: '#d50000',
+              border: '1px solid black',
+              p: 1,
+              borderRadius: 1,
+            }}
+            >
+              <Typography align='center'>'Hubo un error'</Typography>
+            </Box>
+          }
         </DialogContent>
         <DialogActions sx={{display: 'flex', justifyContent: "space-around"}}>
-          <Button variant='contained' sx={{textTransform: 'none', fontSize: '1rem'}}>Agregar tarea</Button>
+          <Button variant='contained' onClick={handleAddTask} sx={{textTransform: 'none', fontSize: '1rem'}}>Agregar tarea</Button>
           <Button onClick={handleModal} variant='contained' sx={{textTransform: 'none', fontSize: '1rem'}}>Cancelar</Button>
         </DialogActions>
       </Dialog>
