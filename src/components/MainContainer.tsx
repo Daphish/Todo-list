@@ -16,6 +16,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useState, useEffect } from 'react';
 import { Task } from '../styles/types';
+import dayjs from 'dayjs';
 
 export default function MainContainer() {
 
@@ -27,7 +28,7 @@ export default function MainContainer() {
   const [ order, setOrder ] = React.useState<string | null>('asc')
   const [ taskName, setTaskName ] = useState('');
   const [ taskDescription, setTaskDescription ] = useState('');
-  const [ taskDue, setTaskDue ] = useState('Sin fecha límite');
+  const [ taskDue, setTaskDue ] = useState<string | null>(null);
   const [ addErr, setAddErr ] = useState<boolean>(false);
   const [ addErr2, setAddErr2 ] = useState<boolean>(false);
 
@@ -37,20 +38,27 @@ export default function MainContainer() {
 
   function handleAddTask() {
     if(taskName && taskDescription){
-      const newTask : Task = {
-        title: taskName,
-        description: taskDescription,
-        deadline: taskDue,
-        state: 'Pendiente',
-        userId: user!.uid,
-      }
-      dispatch(addTask(newTask));
-      setTaskName('');
-      setTaskDescription('');
-      setTaskDue('Sin fecha límite');
-      if(taskState.finished){
-        handleModal();
-        dispatch(finish());
+      if(taskDue && dayjs(taskDue, 'DD/MM/YYYY', true).isValid()){
+        const newTask : Task = {
+          title: taskName,
+          description: taskDescription,
+          deadline: taskDue,
+          state: 'Pendiente',
+          userId: user!.uid,
+        }
+        dispatch(addTask(newTask));
+        setTaskName('');
+        setTaskDescription('');
+        setTaskDue(null);
+        if(taskState.finished){
+          handleModal();
+          dispatch(finish());
+        }
+      } else {
+        setAddErr(true);
+        setTimeout(() => {
+          setAddErr(false);
+      }, 3000);
       }
     } else {
       setAddErr(true);
@@ -203,6 +211,7 @@ export default function MainContainer() {
             fullWidth
             color="primary"
             variant='outlined'
+            value={taskName}
             onChange={(e) => setTaskName(e.target.value)}
           />
           <TextField
@@ -212,12 +221,13 @@ export default function MainContainer() {
             fullWidth
             color="primary"
             variant='outlined'
+            value={taskDescription}
             multiline
             onChange={(e) => setTaskDescription(e.target.value)}
           />
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
             <DemoContainer components={['DatePicker']}>
-              <DatePicker label="Día límite" onChange={(e) => setTaskDue(e!.format('DD/MM/YYYY'))}/>
+              <DatePicker label="Día límite" onChange={(e) => setTaskDue(e ? e.format('DD/MM/YYYY') : null)}/>
             </DemoContainer>
           </LocalizationProvider>
           {addErr &&
@@ -230,14 +240,13 @@ export default function MainContainer() {
               borderRadius: 1,
             }}
             >
-              <Typography align='center'>'Datos incompletos'</Typography>
+              <Typography align='center'>Datos incompletos</Typography>
             </Box>
           }
           {taskState.loading &&
             <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContet: 'center'
+              textAlign: 'center',
+              p: 1,
             }}>
               <CircularProgress color='primary'></CircularProgress>
             </Box>
@@ -252,7 +261,7 @@ export default function MainContainer() {
               borderRadius: 1,
             }}
             >
-              <Typography align='center'>'Hubo un error'</Typography>
+              <Typography align='center'>Hubo un error</Typography>
             </Box>
           }
         </DialogContent>

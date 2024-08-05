@@ -23,6 +23,6 @@ model Task {
   description String
   deadline    String?
   state       TaskState
-  userId      String    @unique
+  userId      String
   id          Int       @id   @default(autoincrement())
 }

@@ -6,7 +6,7 @@ type initState = {
     taskList: Taskdb[],
     loading: boolean,
     error: null | string | unknown,
-    finished: boolean
+    finished: boolean,
 }
 
 const initialState : initState = {
@@ -25,7 +25,7 @@ const addTask = createAsyncThunk('task/addTask', async (task: Task, { rejectWith
             },
             body: JSON.stringify(task),
         });
-        const data = response.json();
+        const data : Taskdb =  await response.json();
         return data;
     } catch (error : any) {
         console.error('Error creating task:', error);
@@ -50,6 +50,7 @@ export const taskSlice = createSlice({
         .addCase(addTask.fulfilled, (state, action) => {
             state.loading = false;
             state.taskList.push(action.payload);
+            state.finished = true;
         })
         .addCase(addTask.rejected, (state, action) => {
             state.loading = false;
