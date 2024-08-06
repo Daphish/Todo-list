@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions } from "@mui/material"
+import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions, Grid } from "@mui/material"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseAuth } from "../firebase/config";
 import ToggleButton from '@mui/material/ToggleButton';
@@ -8,7 +8,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Titulo from "./Titulo";
 import {useAppDispatch, useAppSelector} from '../lib/hooks'
 import { show, unshow } from '../lib/features/modalSlice'
-import { addTask, finish } from '../lib/features/taskSlice'
+import { getTasks, addTask, finish } from '../lib/features/taskSlice'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-gb';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
@@ -17,6 +17,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useState, useEffect } from 'react';
 import { Task } from '../styles/types';
 import dayjs from 'dayjs';
+import TaskCard from './TaskCard';
 
 export default function MainContainer() {
 
@@ -69,13 +70,19 @@ export default function MainContainer() {
   }
 
   useEffect(() => {
-    if (!taskState.loading && taskState.error) {
+    if (user) {
+      dispatch(getTasks(user.uid));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!taskState.loadingAdd && taskState.error) {
       setAddErr2(true);
       setTimeout(() => {
         setAddErr2(false);
       }, 3000);
     }
-  }, [taskState.loading, taskState.error]);
+  }, [taskState.loadingAdd, taskState.error]);
 
   const handleFilter = (
     event: React.MouseEvent<HTMLElement>,
@@ -194,9 +201,29 @@ export default function MainContainer() {
               <AddCircleIcon />
             </Fab>
           </Box>
-          <Typography variant= 'h5' align= 'center' sx={{margin: 2}}>
-            No hay ninguna tarea pendiente.
-          </Typography>
+          {!taskState.loadingGet ? (taskState.taskList.length === 0 ? (
+            <Typography variant= 'h5' align= 'center' sx={{margin: 2}}>
+              No hay ninguna tarea pendiente.
+            </Typography>
+            ) : 
+            <Grid
+              container
+              justifyContent="flex-start"
+              spacing={2}
+              sx={{ mt: 2}}
+            >
+              {taskState.taskList.map(task => (
+                <Grid item xs={4} key={task.id}>
+                  <TaskCard
+                    title={task.title}
+                    description={task.description}
+                    deadline={task.deadline}
+                  ></TaskCard>
+                </Grid>
+              ))}
+            </Grid>
+          ) : <CircularProgress color="primary"></CircularProgress>
+          }
       </Box>
       <Dialog
         open={value}
@@ -243,7 +270,7 @@ export default function MainContainer() {
               <Typography align='center'>Datos incompletos</Typography>
             </Box>
           }
-          {taskState.loading &&
+          {taskState.loadingAdd &&
             <Box sx={{
               textAlign: 'center',
               p: 1,
@@ -267,7 +294,7 @@ export default function MainContainer() {
         </DialogContent>
         <DialogActions sx={{display: 'flex', justifyContent: "space-around"}}>
           <Button variant='contained' onClick={handleAddTask} sx={{textTransform: 'none', fontSize: '1rem'}}>Agregar tarea</Button>
-          <Button onClick={handleModal} variant='contained' sx={{textTransform: 'none', fontSize: '1rem'}}>Cancelar</Button>
+          <Button onClick={handleModal} variant='outlined' color="error" sx={{textTransform: 'none', fontSize: '1rem'}}>Cancelar</Button>
         </DialogActions>
       </Dialog>
     </>
