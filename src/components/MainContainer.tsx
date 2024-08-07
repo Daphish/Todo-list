@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions, Grid } from "@mui/material"
+import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions, Grid, Card, CardContent, Divider, CardActions } from "@mui/material"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseAuth } from "../firebase/config";
 import ToggleButton from '@mui/material/ToggleButton';
@@ -15,9 +15,8 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useState, useEffect } from 'react';
-import { Task } from '../styles/types';
-import dayjs from 'dayjs';
-import TaskCard from './TaskCard';
+import { Task, Taskdb } from '../styles/types';
+import dayjs, { Dayjs } from 'dayjs';
 
 export default function MainContainer() {
 
@@ -32,6 +31,9 @@ export default function MainContainer() {
   const [ taskDue, setTaskDue ] = useState<string | null>(null);
   const [ addErr, setAddErr ] = useState<boolean>(false);
   const [ addErr2, setAddErr2 ] = useState<boolean>(false);
+  const [ pendingTasks, setPendingTasks ] = useState<Taskdb[]>([]);
+  const [ completedTasks, setCompletedTasks ] = useState<Taskdb[]>([]);
+  const [ tasksLoaded, setTasksLoaded ] = useState<boolean>(false);
 
   function handleModal() {
     value === true ? dispatch(unshow()) : dispatch(show());
@@ -74,6 +76,15 @@ export default function MainContainer() {
       dispatch(getTasks(user.uid));
     }
   }, [user]);
+
+  useEffect(() => {
+    setPendingTasks(taskState.taskList.filter(task => task.state === "Pendiente"));
+    setCompletedTasks(taskState.taskList.filter(task => task.state === "Completada"));
+  }, [taskState.finished])
+
+  useEffect(() => {
+    setTasksLoaded(true);
+  }, [pendingTasks, completedTasks])
 
   useEffect(() => {
     if (!taskState.loadingAdd && taskState.error) {
@@ -201,28 +212,137 @@ export default function MainContainer() {
               <AddCircleIcon />
             </Fab>
           </Box>
-          {!taskState.loadingGet ? (taskState.taskList.length === 0 ? (
+          {tasksLoaded ? (filter === "pending" ? (pendingTasks.length === 0 ? (
             <Typography variant= 'h5' align= 'center' sx={{margin: 2}}>
               No hay ninguna tarea pendiente.
             </Typography>
-            ) : 
-            <Grid
-              container
-              justifyContent="flex-start"
-              spacing={2}
-              sx={{ mt: 2}}
+          ) :
+            <Box
+              sx={{
+                marginLeft: { xs: 3, sm: 1, md: 0},
+                marginRight: { xs: 3, sm: 1, md: 0}
+              }}
             >
-              {taskState.taskList.map(task => (
-                <Grid item xs={4} key={task.id}>
-                  <TaskCard
-                    title={task.title}
-                    description={task.description}
-                    deadline={task.deadline}
-                  ></TaskCard>
-                </Grid>
-              ))}
-            </Grid>
-          ) : <CircularProgress color="primary"></CircularProgress>
+              <Grid
+                container
+                justifyContent="flex-start"
+                spacing={2}
+                sx={{ mt: 2, mb: 2}}
+              >
+                {pendingTasks.map(task => (
+                  <Grid item xs={12} sm={6} lg={3}  key={task.id}>
+                    <Card sx={{background: 'linear-gradient(to bottom, #006405, #002803)', boxShadow: '0px 0px 8px rgba(255, 255, 255, 0.2)'}}>
+                      <CardContent>
+                        {task.deadline ?
+                            <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
+                            :
+                            <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
+                        }
+                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                        <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
+                        <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
+                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                      </CardContent>
+                      <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
+                        <Button size="small" variant='contained' sx={{textTransform: 'none'}}>Editar</Button>
+                        <Button size="small" variant='contained' color="info" sx={{textTransform: 'none'}}>Completada</Button>
+                        <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          ) : (filter === "complete" ? (completedTasks.length === 0 ? (
+            <Typography variant= 'h5' align= 'center' sx={{margin: 2}}>
+              No hay ninguna tarea completada.
+            </Typography>
+          ) :
+            <Box
+              sx={{
+                marginLeft: { xs: 3, sm: 1, md: 0},
+                marginRight: { xs: 3, sm: 1, md: 0}
+              }}
+            >
+              <Grid
+                container
+                justifyContent="flex-start"
+                spacing={2}
+                sx={{ mt: 2, mb: 2}}
+              >
+                {completedTasks.map(task => (
+                  <Grid item xs={12} sm={6} lg={3}  key={task.id}>
+                    <Card sx={{background: 'linear-gradient(to bottom, #006405, #002803)', boxShadow: '0px 0px 8px rgba(255, 255, 255, 0.2)'}}>
+                      <CardContent>
+                        {task.deadline ?
+                            <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
+                            :
+                            <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
+                        }
+                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                        <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
+                        <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
+                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                      </CardContent>
+                      <CardActions sx={{ display: 'flex', justifyContent: 'center'}}>
+                        <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          ) : (taskState.taskList.length === 0 ? (
+            <Typography variant= 'h5' align= 'center' sx={{margin: 2}}>
+              No hay ninguna tarea.
+            </Typography>
+          ) :
+            <Box
+              sx={{
+                marginLeft: { xs: 3, sm: 1, md: 0},
+                marginRight: { xs: 3, sm: 1, md: 0}
+              }}
+            >
+              <Grid
+                container
+                justifyContent="flex-start"
+                spacing={2}
+                sx={{ mt: 2, mb: 2}}
+              >
+                {taskState.taskList.map(task => (
+                  <Grid item xs={12} sm={6} lg={3}  key={task.id}>
+                    <Card sx={{background: 'linear-gradient(to bottom, #006405, #002803)', boxShadow: '0px 0px 8px rgba(255, 255, 255, 0.2)'}}>
+                      <CardContent>
+                        {task.deadline ?
+                            <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
+                            :
+                            <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
+                        }
+                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                        <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
+                        <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
+                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                      </CardContent>
+                      {task.state === 'Pendiente' ?
+                        <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
+                          <Button size="small" variant='contained' sx={{textTransform: 'none'}}>Editar</Button>
+                          <Button size="small" variant='contained' color="info" sx={{textTransform: 'none'}}>Completada</Button>
+                          <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
+                        </CardActions>
+                        :
+                        <CardActions sx={{ display: 'flex', justifyContent: 'center'}}>
+                          <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
+                        </CardActions>
+                      }
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          ))) : 
+          <Box sx={{ textAlign: 'center', marginTop: 2 }}>
+            <CircularProgress color="primary"/>
+          </Box>
           }
       </Box>
       <Dialog

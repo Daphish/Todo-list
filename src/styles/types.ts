@@ -1,3 +1,5 @@
+import { Dayjs } from "dayjs";
+
 export type Task = {
     title: string;
     description: string;
@@ -8,4 +10,5 @@ export type Task = {
 
 export type Taskdb = Task & {
     id: number;
+    deadline: string | null | Dayjs;
 }
