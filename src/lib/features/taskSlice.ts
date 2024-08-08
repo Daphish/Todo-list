@@ -1,6 +1,7 @@
 'use client'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { Task, Taskdb } from '@/src/styles/types'
+import { sort, sortDesc } from '@/src/utils'
 
 type initState = {
     taskList: Taskdb[],
@@ -52,6 +53,16 @@ const getTasks = createAsyncThunk('task/getTasks', async (userId : string, { rej
     }
 });
 
+const sortTasks = createAsyncThunk('task/sortTasks', async (tasks : Taskdb[]) => {
+    let sortedTasks = tasks;
+    return sort(sortedTasks);
+})
+
+const sortDescTasks = createAsyncThunk('task/sortDescTasks', async (tasks : Taskdb[]) => {
+    let sortedTasks = tasks;
+    return sortDesc(sortedTasks);
+})
+
 export const taskSlice = createSlice({
     name: "task",
     initialState,
@@ -88,10 +99,16 @@ export const taskSlice = createSlice({
             state.loadingAdd = false;
             state.error = action.payload;
         })
+        .addCase(sortTasks.fulfilled, (state, action) => {
+            state.taskList = action.payload;
+        })
+        .addCase(sortDescTasks.fulfilled, (state, action) => {
+            state.taskList = action.payload;
+        })
     },
 })
 
-export { addTask, getTasks };
+export { addTask, getTasks, sortTasks, sortDescTasks };
 export const { finish } = taskSlice.actions;
 
 export default taskSlice.reducer

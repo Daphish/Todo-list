@@ -10,5 +10,4 @@ export type Task = {
 
 export type Taskdb = Task & {
     id: number;
-    deadline: string | null | Dayjs;
 }

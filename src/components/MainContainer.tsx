@@ -8,7 +8,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Titulo from "./Titulo";
 import {useAppDispatch, useAppSelector} from '../lib/hooks'
 import { show, unshow } from '../lib/features/modalSlice'
-import { getTasks, addTask, finish } from '../lib/features/taskSlice'
+import { getTasks, addTask, finish, sortTasks, sortDescTasks } from '../lib/features/taskSlice'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-gb';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
@@ -55,6 +55,11 @@ export default function MainContainer() {
         setTaskDue(null);
         if(taskState.finished){
           handleModal();
+          if(order === 'asc'){
+            dispatch(sortTasks(taskState.taskList));
+          } else{
+            dispatch(sortDescTasks(taskState.taskList));
+          }
           dispatch(finish());
         }
       } else {
@@ -78,13 +83,12 @@ export default function MainContainer() {
   }, [user]);
 
   useEffect(() => {
-    setPendingTasks(taskState.taskList.filter(task => task.state === "Pendiente"));
-    setCompletedTasks(taskState.taskList.filter(task => task.state === "Completada"));
+    if(taskState.finished){
+      setPendingTasks(taskState.taskList.filter(task => task.state === "Pendiente"));
+      setCompletedTasks(taskState.taskList.filter(task => task.state === "Completada"));
+      setTasksLoaded(true);
+    }
   }, [taskState.finished])
-
-  useEffect(() => {
-    setTasksLoaded(true);
-  }, [pendingTasks, completedTasks])
 
   useEffect(() => {
     if (!taskState.loadingAdd && taskState.error) {
@@ -94,6 +98,14 @@ export default function MainContainer() {
       }, 3000);
     }
   }, [taskState.loadingAdd, taskState.error]);
+
+  useEffect(() => {
+    if(order === 'asc'){
+      dispatch(sortTasks(taskState.taskList));
+    } else {
+      dispatch(sortDescTasks(taskState.taskList));
+    }
+  }, [order])
 
   const handleFilter = (
     event: React.MouseEvent<HTMLElement>,
