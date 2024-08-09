@@ -61,7 +61,7 @@ const sortTasks = createAsyncThunk('task/sortTasks', async (tasks : Taskdb[]) =>
 const sortDescTasks = createAsyncThunk('task/sortDescTasks', async (tasks : Taskdb[]) => {
     let sortedTasks = tasks;
     return sortDesc(sortedTasks);
-})
+});
 
 export const taskSlice = createSlice({
     name: "task",
@@ -101,9 +101,11 @@ export const taskSlice = createSlice({
         })
         .addCase(sortTasks.fulfilled, (state, action) => {
             state.taskList = action.payload;
+            state.finished = true;
         })
         .addCase(sortDescTasks.fulfilled, (state, action) => {
             state.taskList = action.payload;
+            state.finished = true;
         })
     },
 })

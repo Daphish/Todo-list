@@ -1,6 +1,6 @@
 'use server'
 import { prisma }from '@/src/lib/prisma/prisma'
-import { sort } from '@/src/utils';
+import { sort, sortDesc } from '@/src/utils';
 
 export async function GET(request: Request, { params }: { params: { userId: string }}) {
     try{

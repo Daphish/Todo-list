@@ -7,17 +7,18 @@ function parseDate(dateStr : string) {
 }
 
 export function sort(tasks : Taskdb[]) {
-    let sortedTasks = tasks;
+    let sortedTasks = [...tasks];
     sortedTasks.sort((a, b) => {
         if(!a.deadline) return 1;
         if(!b.deadline) return -1;
         return (parseDate(a.deadline)).getTime() - (parseDate(b.deadline)).getTime();
     });
+    console.log(sortedTasks);
     return sortedTasks;
 }
 
 export function sortDesc(tasks : Taskdb[]) {
-    let initTasks = tasks;
+    let initTasks = [...tasks];
     const sortedTasks = initTasks.sort((a, b) => {
         if(!b.deadline){
             return 1
@@ -27,6 +28,6 @@ export function sortDesc(tasks : Taskdb[]) {
         }
         return (parseDate(b.deadline)).getTime() - (parseDate(a.deadline)).getTime();
     });
-    console.log(sortedTasks)
+    console.log(sortedTasks);
     return sortedTasks;
 }

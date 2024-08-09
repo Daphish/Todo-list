@@ -39,9 +39,9 @@ export default function MainContainer() {
     value === true ? dispatch(unshow()) : dispatch(show());
   }
 
-  function handleAddTask() {
+  async function handleAddTask() {
     if(taskName && taskDescription){
-      if(taskDue && dayjs(taskDue, 'DD/MM/YYYY', true).isValid()){
+      if(!taskDue){
         const newTask : Task = {
           title: taskName,
           description: taskDescription,
@@ -49,7 +49,7 @@ export default function MainContainer() {
           state: 'Pendiente',
           userId: user!.uid,
         }
-        dispatch(addTask(newTask));
+        await dispatch(addTask(newTask));
         setTaskName('');
         setTaskDescription('');
         setTaskDue(null);
@@ -62,13 +62,35 @@ export default function MainContainer() {
           }
           dispatch(finish());
         }
+      } else{
+        if(dayjs(taskDue, 'DD/MM/YYYY', true).isValid()){
+          const newTask : Task = {
+            title: taskName,
+            description: taskDescription,
+            deadline: taskDue,
+            state: 'Pendiente',
+            userId: user!.uid,
+          }
+          await dispatch(addTask(newTask));
+          setTaskName('');
+          setTaskDescription('');
+          setTaskDue(null);
+          if(taskState.finished){
+            handleModal();
+            if(order === 'asc'){
+              dispatch(sortTasks(taskState.taskList));
+            } else{
+              dispatch(sortDescTasks(taskState.taskList));
+            }
+            dispatch(finish());
+          }
       } else {
         setAddErr(true);
         setTimeout(() => {
           setAddErr(false);
       }, 3000);
       }
-    } else {
+    } } else {
       setAddErr(true);
       setTimeout(() => {
         setAddErr(false);
@@ -78,12 +100,15 @@ export default function MainContainer() {
 
   useEffect(() => {
     if (user) {
-      dispatch(getTasks(user.uid));
+      const gettingTasks = async () => {
+        await dispatch(getTasks(user.uid));
+      }
+      gettingTasks();
     }
   }, [user]);
 
   useEffect(() => {
-    if(taskState.finished){
+    if(!taskState.finished){
       setPendingTasks(taskState.taskList.filter(task => task.state === "Pendiente"));
       setCompletedTasks(taskState.taskList.filter(task => task.state === "Completada"));
       setTasksLoaded(true);
@@ -100,10 +125,13 @@ export default function MainContainer() {
   }, [taskState.loadingAdd, taskState.error]);
 
   useEffect(() => {
-    if(order === 'asc'){
-      dispatch(sortTasks(taskState.taskList));
-    } else {
-      dispatch(sortDescTasks(taskState.taskList));
+    if(tasksLoaded){
+      if(order === 'asc'){
+        dispatch(sortTasks(taskState.taskList));
+      } else {
+        dispatch(sortDescTasks(taskState.taskList));
+      }
+      dispatch(finish())
     }
   }, [order])
 
