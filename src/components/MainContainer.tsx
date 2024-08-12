@@ -8,7 +8,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Titulo from "./Titulo";
 import {useAppDispatch, useAppSelector} from '../lib/hooks'
 import { show, unshow } from '../lib/features/modalSlice'
-import { getTasks, addTask, finish, sortTasks, sortDescTasks } from '../lib/features/taskSlice'
+import { getTasks, addTask, finish, sortTasks, sortDescTasks, endSort } from '../lib/features/taskSlice'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-gb';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
@@ -17,6 +17,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useState, useEffect } from 'react';
 import { Task, Taskdb } from '../styles/types';
 import dayjs, { Dayjs } from 'dayjs';
+import { sort, sortDesc } from '@/src/utils'
 
 export default function MainContainer() {
 
@@ -37,9 +38,18 @@ export default function MainContainer() {
 
   function handleModal() {
     value === true ? dispatch(unshow()) : dispatch(show());
+    setTaskName('');
+    setTaskDescription('');
+    setTaskDue(null);
   }
 
-  async function handleAddTask() {
+  function handleComplete(id : number){
+    dispatch(setComplete(id));
+    const updatedTasks : Taskdb[] = [...completedTasks, pendingTasks.splice(pendingTasks.findIndex(task => task.id === id), 1)]
+    setCompletedTasks(updatedTasks);
+  }
+
+  function handleAddTask() {
     if(taskName && taskDescription){
       if(!taskDue){
         const newTask : Task = {
@@ -49,19 +59,11 @@ export default function MainContainer() {
           state: 'Pendiente',
           userId: user!.uid,
         }
-        await dispatch(addTask(newTask));
+        dispatch(addTask(newTask));
         setTaskName('');
         setTaskDescription('');
         setTaskDue(null);
-        if(taskState.finished){
-          handleModal();
-          if(order === 'asc'){
-            dispatch(sortTasks(taskState.taskList));
-          } else{
-            dispatch(sortDescTasks(taskState.taskList));
-          }
-          dispatch(finish());
-        }
+        handleModal();
       } else{
         if(dayjs(taskDue, 'DD/MM/YYYY', true).isValid()){
           const newTask : Task = {
@@ -71,19 +73,11 @@ export default function MainContainer() {
             state: 'Pendiente',
             userId: user!.uid,
           }
-          await dispatch(addTask(newTask));
+          dispatch(addTask(newTask));
           setTaskName('');
           setTaskDescription('');
           setTaskDue(null);
-          if(taskState.finished){
-            handleModal();
-            if(order === 'asc'){
-              dispatch(sortTasks(taskState.taskList));
-            } else{
-              dispatch(sortDescTasks(taskState.taskList));
-            }
-            dispatch(finish());
-          }
+          handleModal();
       } else {
         setAddErr(true);
         setTimeout(() => {
@@ -104,16 +98,32 @@ export default function MainContainer() {
         await dispatch(getTasks(user.uid));
       }
       gettingTasks();
+    } else {
+      setTasksLoaded(false);
     }
   }, [user]);
 
   useEffect(() => {
-    if(!taskState.finished){
+    if(taskState.finished){
       setPendingTasks(taskState.taskList.filter(task => task.state === "Pendiente"));
       setCompletedTasks(taskState.taskList.filter(task => task.state === "Completada"));
       setTasksLoaded(true);
+      dispatch(finish());
+    } else {
+      if(!taskState.sorted){
+        if(order === 'asc'){
+          dispatch(sortTasks(taskState.taskList));
+          setPendingTasks(sort(taskState.taskList.filter(task => task.state === "Pendiente")));
+          setCompletedTasks(sort(taskState.taskList.filter(task => task.state === "Completada")));
+        } else {
+          dispatch(sortDescTasks(taskState.taskList));
+          setPendingTasks(sortDesc(taskState.taskList.filter(task => task.state === "Pendiente")));
+          setCompletedTasks(sortDesc(taskState.taskList.filter(task => task.state === "Completada")));
+
+        }
+      }
     }
-  }, [taskState.finished])
+  }, [taskState.taskList])
 
   useEffect(() => {
     if (!taskState.loadingAdd && taskState.error) {
@@ -128,10 +138,13 @@ export default function MainContainer() {
     if(tasksLoaded){
       if(order === 'asc'){
         dispatch(sortTasks(taskState.taskList));
+        setPendingTasks(sort(pendingTasks));
+        setCompletedTasks(sort(completedTasks));
       } else {
         dispatch(sortDescTasks(taskState.taskList));
+        setPendingTasks(sortDesc(pendingTasks));
+        setCompletedTasks(sortDesc(completedTasks));
       }
-      dispatch(finish())
     }
   }, [order])
 
@@ -366,7 +379,7 @@ export default function MainContainer() {
                       {task.state === 'Pendiente' ?
                         <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
                           <Button size="small" variant='contained' sx={{textTransform: 'none'}}>Editar</Button>
-                          <Button size="small" variant='contained' color="info" sx={{textTransform: 'none'}}>Completada</Button>
+                          <Button size="small" variant='contained' onClick={() => handleComplete(task.id)} color="info" sx={{textTransform: 'none'}}>Completada</Button>
                           <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
                         </CardActions>
                         :

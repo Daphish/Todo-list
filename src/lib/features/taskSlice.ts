@@ -9,6 +9,7 @@ type initState = {
     loadingAdd: boolean,
     error: null | string | unknown,
     finished: boolean,
+    sorted: boolean,
 }
 
 const initialState : initState = {
@@ -17,6 +18,7 @@ const initialState : initState = {
     loadingAdd: false,
     error: null,
     finished: false,
+    sorted: false,
 }
 
 const addTask = createAsyncThunk('task/addTask', async (task: Task, { rejectWithValue }) => {
@@ -69,7 +71,10 @@ export const taskSlice = createSlice({
     reducers: {
         finish: (state) => {
             state.finished = false;
-        }
+        },
+        endSort: (state) => {
+            state.sorted = false;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -93,7 +98,7 @@ export const taskSlice = createSlice({
         .addCase(addTask.fulfilled, (state, action) => {
             state.loadingAdd = false;
             state.taskList.push(action.payload);
-            state.finished = true;
+            state.sorted = false;
         })
         .addCase(addTask.rejected, (state, action) => {
             state.loadingAdd = false;
@@ -101,16 +106,16 @@ export const taskSlice = createSlice({
         })
         .addCase(sortTasks.fulfilled, (state, action) => {
             state.taskList = action.payload;
-            state.finished = true;
+            state.sorted = true;
         })
         .addCase(sortDescTasks.fulfilled, (state, action) => {
             state.taskList = action.payload;
-            state.finished = true;
+            state.sorted = true;
         })
     },
 })
 
 export { addTask, getTasks, sortTasks, sortDescTasks };
-export const { finish } = taskSlice.actions;
+export const { finish, endSort } = taskSlice.actions;
 
 export default taskSlice.reducer

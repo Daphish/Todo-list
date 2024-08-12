@@ -13,7 +13,6 @@ export function sort(tasks : Taskdb[]) {
         if(!b.deadline) return -1;
         return (parseDate(a.deadline)).getTime() - (parseDate(b.deadline)).getTime();
     });
-    console.log(sortedTasks);
     return sortedTasks;
 }
 
@@ -28,6 +27,5 @@ export function sortDesc(tasks : Taskdb[]) {
         }
         return (parseDate(b.deadline)).getTime() - (parseDate(a.deadline)).getTime();
     });
-    console.log(sortedTasks);
     return sortedTasks;
 }
