@@ -14,3 +14,39 @@ export async function POST(request: Request) {
         })
     }
 }
+
+export async function PATCH(request: Request) {
+    try {
+        const res = await request.json();
+        const completedTask = await prisma.task.update({
+            where: {
+                id: res,
+            },
+            data: {
+                state: 'Completada',
+            },
+        })
+        return new Response(JSON.stringify(completedTask));
+    } catch (error : any) {
+        return new Response(`Error : ${error.message}`, {
+            status: 400,
+        })
+    }
+}
+
+export async function PUT(request: Request) {
+    try {
+        const res = await request.json();
+        const updatedTask = await prisma.task.update({
+            where: {
+                id: res.id,
+            },
+            data: res
+        })
+        return new Response(JSON.stringify(updatedTask));
+    } catch (error : any) {
+        return new Response(`Error : ${error.message}`, {
+            status: 400,
+        })
+    }
+}

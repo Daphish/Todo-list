@@ -7,8 +7,8 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Titulo from "./Titulo";
 import {useAppDispatch, useAppSelector} from '../lib/hooks'
-import { show, unshow } from '../lib/features/modalSlice'
-import { getTasks, addTask, finish, sortTasks, sortDescTasks, endSort } from '../lib/features/taskSlice'
+import { showAdd, showUpdate, unshowAdd, unshowUpdate } from '../lib/features/modalSlice'
+import { getTasks, addTask, finish, sortTasks, sortDescTasks, setComplete, updateTask } from '../lib/features/taskSlice'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-gb';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
@@ -16,12 +16,13 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useState, useEffect } from 'react';
 import { Task, Taskdb } from '../styles/types';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { sort, sortDesc } from '@/src/utils'
 
 export default function MainContainer() {
 
-  const value = useAppSelector((state) => state.modal.value);
+  const addTaskVal = useAppSelector((state) => state.modal.addTaskVal);
+  const updateTaskVal = useAppSelector((state) => state.modal.updateTaskVal);
   const taskState = useAppSelector ((state) => state.task);
   const dispatch = useAppDispatch();
   const [ user, loading ] = useAuthState(firebaseAuth);
@@ -30,23 +31,73 @@ export default function MainContainer() {
   const [ taskName, setTaskName ] = useState('');
   const [ taskDescription, setTaskDescription ] = useState('');
   const [ taskDue, setTaskDue ] = useState<string | null>(null);
+  const [ taskID, setTaskID ] = useState<number>(0);
   const [ addErr, setAddErr ] = useState<boolean>(false);
   const [ addErr2, setAddErr2 ] = useState<boolean>(false);
   const [ pendingTasks, setPendingTasks ] = useState<Taskdb[]>([]);
   const [ completedTasks, setCompletedTasks ] = useState<Taskdb[]>([]);
   const [ tasksLoaded, setTasksLoaded ] = useState<boolean>(false);
 
-  function handleModal() {
-    value === true ? dispatch(unshow()) : dispatch(show());
+  function handleAddModal() {
+    addTaskVal === true ? dispatch(unshowAdd()) : dispatch(showAdd());
     setTaskName('');
     setTaskDescription('');
     setTaskDue(null);
   }
 
-  function handleComplete(id : number){
-    dispatch(setComplete(id));
-    const updatedTasks : Taskdb[] = [...completedTasks, pendingTasks.splice(pendingTasks.findIndex(task => task.id === id), 1)]
-    setCompletedTasks(updatedTasks);
+  function handleUpdateModal() {
+    updateTaskVal === true ? dispatch(unshowUpdate()) : dispatch(showUpdate());
+    setTaskName('');
+    setTaskDescription('');
+    setTaskDue(null);
+    setTaskID(0);
+  }
+
+  function handleUpdate(task : Taskdb) {
+    handleUpdateModal();
+    setTaskName(task.title);
+    setTaskDescription(task.description);
+    setTaskDue(task.deadline);
+    setTaskID(task.id)
+  }
+
+  function handleUpdateTask() {
+    if(taskName && taskDescription){
+      if(!taskDue){
+        const updatedTask : Taskdb = {
+          id: taskID,
+          title: taskName,
+          description: taskDescription,
+          deadline: taskDue,
+          state: 'Pendiente',
+          userId: user!.uid,
+        }
+        dispatch(updateTask(updatedTask));
+        handleUpdateModal();
+      } else{
+        if(dayjs(taskDue, 'DD/MM/YYYY', true).isValid()){
+          const updatedTask : Taskdb = {
+            id: taskID,
+            title: taskName,
+            description: taskDescription,
+            deadline: taskDue,
+            state: 'Pendiente',
+            userId: user!.uid,
+          }
+          dispatch(updateTask(updatedTask));
+          handleUpdateModal();
+      } else {
+        setAddErr(true);
+        setTimeout(() => {
+          setAddErr(false);
+      }, 3000);
+      }
+    } } else {
+      setAddErr(true);
+      setTimeout(() => {
+        setAddErr(false);
+      }, 3000);
+    }
   }
 
   function handleAddTask() {
@@ -60,10 +111,7 @@ export default function MainContainer() {
           userId: user!.uid,
         }
         dispatch(addTask(newTask));
-        setTaskName('');
-        setTaskDescription('');
-        setTaskDue(null);
-        handleModal();
+        handleAddModal();
       } else{
         if(dayjs(taskDue, 'DD/MM/YYYY', true).isValid()){
           const newTask : Task = {
@@ -74,10 +122,7 @@ export default function MainContainer() {
             userId: user!.uid,
           }
           dispatch(addTask(newTask));
-          setTaskName('');
-          setTaskDescription('');
-          setTaskDue(null);
-          handleModal();
+          handleAddModal();
       } else {
         setAddErr(true);
         setTimeout(() => {
@@ -126,13 +171,13 @@ export default function MainContainer() {
   }, [taskState.taskList])
 
   useEffect(() => {
-    if (!taskState.loadingAdd && taskState.error) {
+    if (!taskState.loading && taskState.error) {
       setAddErr2(true);
       setTimeout(() => {
         setAddErr2(false);
       }, 3000);
     }
-  }, [taskState.loadingAdd, taskState.error]);
+  }, [taskState.loading, taskState.error]);
 
   useEffect(() => {
     if(tasksLoaded){
@@ -261,7 +306,7 @@ export default function MainContainer() {
               mt: 5
             }}
           >
-            <Fab onClick={handleModal} color='secondary'>
+            <Fab onClick={handleAddModal} color='secondary'>
               <AddCircleIcon />
             </Fab>
           </Box>
@@ -297,8 +342,8 @@ export default function MainContainer() {
                         <Divider sx={{borderColor: '#000000F0'}}></Divider>
                       </CardContent>
                       <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
-                        <Button size="small" variant='contained' sx={{textTransform: 'none'}}>Editar</Button>
-                        <Button size="small" variant='contained' color="info" sx={{textTransform: 'none'}}>Completada</Button>
+                        <Button size="small" variant='contained' onClick={() => handleUpdate(task)} sx={{textTransform: 'none'}}>Editar</Button>
+                        <Button size="small" variant='contained' onClick={() => dispatch(setComplete(task.id))} color="info" sx={{textTransform: 'none'}}>Completada</Button>
                         <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
                       </CardActions>
                     </Card>
@@ -379,7 +424,7 @@ export default function MainContainer() {
                       {task.state === 'Pendiente' ?
                         <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
                           <Button size="small" variant='contained' sx={{textTransform: 'none'}}>Editar</Button>
-                          <Button size="small" variant='contained' onClick={() => handleComplete(task.id)} color="info" sx={{textTransform: 'none'}}>Completada</Button>
+                          <Button size="small" variant='contained' onClick={() => dispatch(setComplete(task.id))} color="info" sx={{textTransform: 'none'}}>Completada</Button>
                           <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
                         </CardActions>
                         :
@@ -399,8 +444,8 @@ export default function MainContainer() {
           }
       </Box>
       <Dialog
-        open={value}
-        onClose={handleModal}
+        open={addTaskVal}
+        onClose={handleAddModal}
       >
         <DialogTitle color={"primary"} sx={{ textAlign: 'center'}}>Nueva Tarea</DialogTitle>
         <DialogContent dividers sx={{'& .MuiFormControl-root': {mt: 1}}}>
@@ -443,7 +488,7 @@ export default function MainContainer() {
               <Typography align='center'>Datos incompletos</Typography>
             </Box>
           }
-          {taskState.loadingAdd &&
+          {taskState.loading &&
             <Box sx={{
               textAlign: 'center',
               p: 1,
@@ -467,7 +512,80 @@ export default function MainContainer() {
         </DialogContent>
         <DialogActions sx={{display: 'flex', justifyContent: "space-around"}}>
           <Button variant='contained' onClick={handleAddTask} sx={{textTransform: 'none', fontSize: '1rem'}}>Agregar tarea</Button>
-          <Button onClick={handleModal} variant='outlined' color="error" sx={{textTransform: 'none', fontSize: '1rem'}}>Cancelar</Button>
+          <Button onClick={handleAddModal} variant='outlined' color="error" sx={{textTransform: 'none', fontSize: '1rem'}}>Cancelar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={updateTaskVal}
+        onClose={handleUpdateModal}
+      >
+        <DialogTitle color={"primary"} sx={{ textAlign: 'center'}}>Actualizando Tarea</DialogTitle>
+        <DialogContent dividers sx={{'& .MuiFormControl-root': {mt: 1}}}>
+          <TextField
+            required
+            id="taskNameU"
+            label="Nombre de la tarea"
+            fullWidth
+            color="primary"
+            variant='outlined'
+            value={taskName}
+            onChange={(e) => setTaskName(e.target.value)}
+          />
+          <TextField
+            required
+            id="taskDescriptionU"
+            label="Descripción de la tarea"
+            fullWidth
+            color="primary"
+            variant='outlined'
+            value={taskDescription}
+            multiline
+            onChange={(e) => setTaskDescription(e.target.value)}
+          />
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
+            <DemoContainer components={['DatePicker']}>
+              <DatePicker value={taskDue ? dayjs(taskDue, 'DD/MM/YYYY') : null} label="Día límite" onChange={(e) => setTaskDue(e ? e.format('DD/MM/YYYY') : null)}/>
+            </DemoContainer>
+          </LocalizationProvider>
+          {addErr &&
+            <Box
+            component='div'
+            sx={{
+              backgroundColor: '#d50000',
+              border: '1px solid black',
+              p: 1,
+              borderRadius: 1,
+            }}
+            >
+              <Typography align='center'>Datos incompletos</Typography>
+            </Box>
+          }
+          {taskState.loading &&
+            <Box sx={{
+              textAlign: 'center',
+              p: 1,
+            }}>
+              <CircularProgress color='primary'></CircularProgress>
+            </Box>
+          }
+          {addErr2 &&
+            <Box
+            component='div'
+            sx={{
+              backgroundColor: '#d50000',
+              border: '1px solid black',
+              p: 1,
+              borderRadius: 1,
+            }}
+            >
+              <Typography align='center'>Hubo un error</Typography>
+            </Box>
+          }
+        </DialogContent>
+        <DialogActions sx={{display: 'flex', justifyContent: "space-around"}}>
+          <Button variant='contained' onClick={handleUpdateTask} sx={{textTransform: 'none', fontSize: '1rem'}}>Actualizar tarea</Button>
+          <Button onClick={handleUpdateModal} variant='outlined' color="error" sx={{textTransform: 'none', fontSize: '1rem'}}>Cancelar</Button>
         </DialogActions>
       </Dialog>
     </>

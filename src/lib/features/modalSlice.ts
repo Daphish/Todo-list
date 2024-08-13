@@ -1,22 +1,29 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
-    value: false
+    addTaskVal: false,
+    updateTaskVal: false,
 }
 
 export const modalSlice = createSlice({
     name: "modal",
     initialState,
     reducers: {
-        show: (state) => {
-            state.value = true
+        showAdd: (state) => {
+            state.addTaskVal = true
         },
-        unshow: (state) => {
-            state.value = false
+        unshowAdd: (state) => {
+            state.addTaskVal = false
+        },
+        showUpdate: (state) => {
+            state.updateTaskVal = true
+        },
+        unshowUpdate: (state) => {
+            state.updateTaskVal = false
         }
     }
 })
 
-export const { show, unshow } = modalSlice.actions
+export const { showAdd, showUpdate, unshowAdd, unshowUpdate } = modalSlice.actions
 
 export default modalSlice.reducer
