@@ -87,6 +87,23 @@ const updateTask = createAsyncThunk('task/updateTask', async (task: Taskdb, { re
     }
 });
 
+const deleteTask = createAsyncThunk('task/deleteTask', async (id: number, { rejectWithValue }) => {
+    try {
+        const response = await fetch('http://localhost:3000/api', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(id),
+        });
+        const data : Taskdb =  await response.json();
+        return data;
+    } catch (error : any) {
+        console.error('Error updating task:', error);
+        return rejectWithValue(error.message);
+    }
+});
+
 const sortTasks = createAsyncThunk('task/sortTasks', async (tasks : Taskdb[]) => {
     let sortedTasks = tasks;
     return sort(sortedTasks);
@@ -138,11 +155,26 @@ export const taskSlice = createSlice({
             state.error = null;
         })
         .addCase(updateTask.fulfilled, (state, action) => {
+            state.loading = false;
             const taskIndex = state.taskList.findIndex(task => task.id === action.payload.id);
             state.taskList[taskIndex] = action.payload;
             state.sorted = false;
         })
         .addCase(updateTask.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+        .addCase(deleteTask.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase(deleteTask.fulfilled, (state, action) => {
+            state.loading = false;
+            const taskIndex = state.taskList.findIndex(task => task.id === action.payload.id);
+            state.taskList.splice(taskIndex, 1);
+            state.sorted = false;
+        })
+        .addCase(deleteTask.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload;
         })
@@ -162,7 +194,7 @@ export const taskSlice = createSlice({
     },
 })
 
-export { addTask, getTasks, sortTasks, sortDescTasks, setComplete, updateTask };
+export { addTask, getTasks, sortTasks, sortDescTasks, setComplete, updateTask, deleteTask };
 export const { finish } = taskSlice.actions;
 
 export default taskSlice.reducer

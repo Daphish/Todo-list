@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions, Grid, Card, CardContent, Divider, CardActions } from "@mui/material"
+import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions, Grid, Card, CardContent, Divider, CardActions, DialogContentText } from "@mui/material"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseAuth } from "../firebase/config";
 import ToggleButton from '@mui/material/ToggleButton';
@@ -7,8 +7,8 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Titulo from "./Titulo";
 import {useAppDispatch, useAppSelector} from '../lib/hooks'
-import { showAdd, showUpdate, unshowAdd, unshowUpdate } from '../lib/features/modalSlice'
-import { getTasks, addTask, finish, sortTasks, sortDescTasks, setComplete, updateTask } from '../lib/features/taskSlice'
+import { showAdd, showUpdate, unshowAdd, unshowUpdate, showDel, unshowDel } from '../lib/features/modalSlice'
+import { getTasks, addTask, finish, sortTasks, sortDescTasks, setComplete, updateTask, deleteTask } from '../lib/features/taskSlice'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-gb';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
@@ -23,11 +23,12 @@ export default function MainContainer() {
 
   const addTaskVal = useAppSelector((state) => state.modal.addTaskVal);
   const updateTaskVal = useAppSelector((state) => state.modal.updateTaskVal);
+  const delTaskVal = useAppSelector((state) => state.modal.delTaskVal);
   const taskState = useAppSelector ((state) => state.task);
   const dispatch = useAppDispatch();
   const [ user, loading ] = useAuthState(firebaseAuth);
-  const [ filter, setFilter] = React.useState<string | null>('pending');
-  const [ order, setOrder ] = React.useState<string | null>('asc')
+  const [ filter, setFilter] = useState<string | null>('pending');
+  const [ order, setOrder ] = useState<string | null>('asc')
   const [ taskName, setTaskName ] = useState('');
   const [ taskDescription, setTaskDescription ] = useState('');
   const [ taskDue, setTaskDue ] = useState<string | null>(null);
@@ -37,6 +38,21 @@ export default function MainContainer() {
   const [ pendingTasks, setPendingTasks ] = useState<Taskdb[]>([]);
   const [ completedTasks, setCompletedTasks ] = useState<Taskdb[]>([]);
   const [ tasksLoaded, setTasksLoaded ] = useState<boolean>(false);
+
+  function handleDeleteModal(){
+    delTaskVal === true ? dispatch(unshowDel()) : dispatch(showDel());
+    setTaskID(0);
+  }
+
+  function handleDelete(id: number){
+    handleDeleteModal()
+    setTaskID(id);
+  }
+
+  function handleDeleteTask(){
+    dispatch(deleteTask(taskID));
+    handleDeleteModal()
+  }
 
   function handleAddModal() {
     addTaskVal === true ? dispatch(unshowAdd()) : dispatch(showAdd());
@@ -344,7 +360,7 @@ export default function MainContainer() {
                       <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
                         <Button size="small" variant='contained' onClick={() => handleUpdate(task)} sx={{textTransform: 'none'}}>Editar</Button>
                         <Button size="small" variant='contained' onClick={() => dispatch(setComplete(task.id))} color="info" sx={{textTransform: 'none'}}>Completada</Button>
-                        <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
+                        <Button size="small" variant='contained' onClick={() => handleDelete(task.id)} color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
                       </CardActions>
                     </Card>
                   </Grid>
@@ -383,7 +399,7 @@ export default function MainContainer() {
                         <Divider sx={{borderColor: '#000000F0'}}></Divider>
                       </CardContent>
                       <CardActions sx={{ display: 'flex', justifyContent: 'center'}}>
-                        <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
+                        <Button size="small" variant='contained' onClick={() => handleDelete(task.id)} color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
                       </CardActions>
                     </Card>
                   </Grid>
@@ -423,13 +439,13 @@ export default function MainContainer() {
                       </CardContent>
                       {task.state === 'Pendiente' ?
                         <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
-                          <Button size="small" variant='contained' sx={{textTransform: 'none'}}>Editar</Button>
+                          <Button size="small" variant='contained' onClick={() => handleUpdate(task)} sx={{textTransform: 'none'}}>Editar</Button>
                           <Button size="small" variant='contained' onClick={() => dispatch(setComplete(task.id))} color="info" sx={{textTransform: 'none'}}>Completada</Button>
-                          <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
+                          <Button size="small" variant='contained' onClick={() => handleDelete(task.id)} color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
                         </CardActions>
                         :
                         <CardActions sx={{ display: 'flex', justifyContent: 'center'}}>
-                          <Button size="small" variant='contained' color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
+                          <Button size="small" variant='contained' onClick={() => handleDelete(task.id)} color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
                         </CardActions>
                       }
                     </Card>
@@ -586,6 +602,22 @@ export default function MainContainer() {
         <DialogActions sx={{display: 'flex', justifyContent: "space-around"}}>
           <Button variant='contained' onClick={handleUpdateTask} sx={{textTransform: 'none', fontSize: '1rem'}}>Actualizar tarea</Button>
           <Button onClick={handleUpdateModal} variant='outlined' color="error" sx={{textTransform: 'none', fontSize: '1rem'}}>Cancelar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={delTaskVal}
+        onClose={handleDeleteModal}
+      >
+        <DialogTitle color={"primary"} sx={{ textAlign: 'center'}}>¿Eliminar?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿De verdad quiere eliminar esta tarea?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{display: 'flex', justifyContent: "space-around"}}>
+          <Button variant='contained' color="error" onClick={handleDeleteTask} sx={{textTransform: 'none', fontSize: '1rem'}}>Sí</Button>
+          <Button variant='contained' onClick={handleDeleteModal} sx={{textTransform: 'none', fontSize: '1rem'}}>No</Button>
         </DialogActions>
       </Dialog>
     </>

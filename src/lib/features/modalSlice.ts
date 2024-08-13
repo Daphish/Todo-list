@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit'
 const initialState = {
     addTaskVal: false,
     updateTaskVal: false,
+    delTaskVal: false,
 }
 
 export const modalSlice = createSlice({
@@ -20,10 +21,16 @@ export const modalSlice = createSlice({
         },
         unshowUpdate: (state) => {
             state.updateTaskVal = false
+        },
+        showDel: (state) => {
+            state.delTaskVal = true
+        },
+        unshowDel: (state) => {
+            state.delTaskVal = false
         }
     }
 })
 
-export const { showAdd, showUpdate, unshowAdd, unshowUpdate } = modalSlice.actions
+export const { showAdd, showUpdate, unshowAdd, unshowUpdate, showDel, unshowDel } = modalSlice.actions
 
 export default modalSlice.reducer

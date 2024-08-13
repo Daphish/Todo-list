@@ -50,3 +50,19 @@ export async function PUT(request: Request) {
         })
     }
 }
+
+export async function DELETE(request: Request) {
+    try {
+        const res = await request.json();
+        const deletedTask = await prisma.task.delete({
+            where: {
+                id: res,
+            },
+        })
+        return new Response(JSON.stringify(deletedTask));
+    } catch (error : any) {
+        return new Response(`Error : ${error.message}`, {
+            status: 400,
+        })
+    }
+}
