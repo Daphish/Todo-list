@@ -4,6 +4,7 @@ const initialState = {
     addTaskVal: false,
     updateTaskVal: false,
     delTaskVal: false,
+    card: false,
 }
 
 export const modalSlice = createSlice({
@@ -27,10 +28,16 @@ export const modalSlice = createSlice({
         },
         unshowDel: (state) => {
             state.delTaskVal = false
+        },
+        showCard: (state) => {
+            state.card = true
+        },
+        unshowCard: (state) => {
+            state.card = false
         }
     }
 })
 
-export const { showAdd, showUpdate, unshowAdd, unshowUpdate, showDel, unshowDel } = modalSlice.actions
+export const { showAdd, showUpdate, unshowAdd, unshowUpdate, showDel, unshowDel, showCard, unshowCard } = modalSlice.actions
 
 export default modalSlice.reducer

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions, Grid, Card, CardContent, Divider, CardActions, DialogContentText } from "@mui/material"
+import { CircularProgress, Box, Typography, Stack, Fab, Dialog, DialogContent, DialogTitle, TextField, Button, DialogActions, Grid, Card, CardContent, Divider, CardActions, DialogContentText, CardActionArea, Modal, TextareaAutosize } from "@mui/material"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { firebaseAuth } from "../firebase/config";
 import ToggleButton from '@mui/material/ToggleButton';
@@ -7,7 +7,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import Titulo from "./Titulo";
 import {useAppDispatch, useAppSelector} from '../lib/hooks'
-import { showAdd, showUpdate, unshowAdd, unshowUpdate, showDel, unshowDel } from '../lib/features/modalSlice'
+import { showAdd, showUpdate, unshowAdd, unshowUpdate, showDel, unshowDel, showCard, unshowCard } from '../lib/features/modalSlice'
 import { getTasks, addTask, finish, sortTasks, sortDescTasks, setComplete, updateTask, deleteTask } from '../lib/features/taskSlice'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/en-gb';
@@ -17,13 +17,28 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useState, useEffect } from 'react';
 import { Task, Taskdb } from '../styles/types';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { sort, sortDesc } from '@/src/utils'
+dayjs.extend(customParseFormat)
+
+const style = {
+  position: 'absolute' as 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  background: 'linear-gradient(to bottom, #006405, #002803)',
+  border: '2px solid #000',
+  boxShadow: '0px 0px 8px rgba(255, 255, 255, 0.2)',
+  p: 2,
+}
 
 export default function MainContainer() {
 
   const addTaskVal = useAppSelector((state) => state.modal.addTaskVal);
   const updateTaskVal = useAppSelector((state) => state.modal.updateTaskVal);
   const delTaskVal = useAppSelector((state) => state.modal.delTaskVal);
+  const card = useAppSelector((state) => state.modal.card);
   const taskState = useAppSelector ((state) => state.task);
   const dispatch = useAppDispatch();
   const [ user, loading ] = useAuthState(firebaseAuth);
@@ -38,6 +53,20 @@ export default function MainContainer() {
   const [ pendingTasks, setPendingTasks ] = useState<Taskdb[]>([]);
   const [ completedTasks, setCompletedTasks ] = useState<Taskdb[]>([]);
   const [ tasksLoaded, setTasksLoaded ] = useState<boolean>(false);
+
+  function handleCardInfo(task : Taskdb){
+    handleCardModal();
+    setTaskDue(task.deadline);
+    setTaskName(task.title);
+    setTaskDescription(task.description);
+  }
+
+  function handleCardModal(){
+    card === true ? dispatch(unshowCard()) : dispatch(showCard());
+    setTaskDue(null);
+    setTaskName('');
+    setTaskDescription('');
+  }
 
   function handleDeleteModal(){
     delTaskVal === true ? dispatch(unshowDel()) : dispatch(showDel());
@@ -66,15 +95,14 @@ export default function MainContainer() {
     setTaskName('');
     setTaskDescription('');
     setTaskDue(null);
-    setTaskID(0);
   }
 
-  function handleUpdate(task : Taskdb) {
+  function handleUpdate(task : Taskdb){
     handleUpdateModal();
     setTaskName(task.title);
     setTaskDescription(task.description);
     setTaskDue(task.deadline);
-    setTaskID(task.id)
+    setTaskID(task.id);
   }
 
   function handleUpdateTask() {
@@ -346,17 +374,21 @@ export default function MainContainer() {
                 {pendingTasks.map(task => (
                   <Grid item xs={12} sm={6} lg={3}  key={task.id}>
                     <Card sx={{background: 'linear-gradient(to bottom, #006405, #002803)', boxShadow: '0px 0px 8px rgba(255, 255, 255, 0.2)'}}>
-                      <CardContent>
-                        {task.deadline ?
-                            <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
-                            :
-                            <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
-                        }
-                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
-                        <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
-                        <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
-                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
-                      </CardContent>
+                      <CardActionArea
+                        onClick={() => handleCardInfo(task)}
+                      >
+                        <CardContent>
+                          {task.deadline ?
+                              <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
+                              :
+                              <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
+                          }
+                          <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                          <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
+                          <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
+                          <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                        </CardContent>
+                      </CardActionArea>
                       <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
                         <Button size="small" variant='contained' onClick={() => handleUpdate(task)} sx={{textTransform: 'none'}}>Editar</Button>
                         <Button size="small" variant='contained' onClick={() => dispatch(setComplete(task.id))} color="info" sx={{textTransform: 'none'}}>Completada</Button>
@@ -387,17 +419,21 @@ export default function MainContainer() {
                 {completedTasks.map(task => (
                   <Grid item xs={12} sm={6} lg={3}  key={task.id}>
                     <Card sx={{background: 'linear-gradient(to bottom, #006405, #002803)', boxShadow: '0px 0px 8px rgba(255, 255, 255, 0.2)'}}>
-                      <CardContent>
-                        {task.deadline ?
-                            <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
-                            :
-                            <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
-                        }
-                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
-                        <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
-                        <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
-                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
-                      </CardContent>
+                      <CardActionArea
+                        onClick={() => handleCardInfo(task)}
+                      >
+                        <CardContent>
+                          {task.deadline ?
+                              <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
+                              :
+                              <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
+                          }
+                          <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                          <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
+                          <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
+                          <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                        </CardContent>
+                      </CardActionArea>
                       <CardActions sx={{ display: 'flex', justifyContent: 'center'}}>
                         <Button size="small" variant='contained' onClick={() => handleDelete(task.id)} color="error" sx={{textTransform: 'none'}}>Eliminar</Button>
                       </CardActions>
@@ -426,17 +462,21 @@ export default function MainContainer() {
                 {taskState.taskList.map(task => (
                   <Grid item xs={12} sm={6} lg={3}  key={task.id}>
                     <Card sx={{background: 'linear-gradient(to bottom, #006405, #002803)', boxShadow: '0px 0px 8px rgba(255, 255, 255, 0.2)'}}>
-                      <CardContent>
-                        {task.deadline ?
-                            <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
-                            :
-                            <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
-                        }
-                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
-                        <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
-                        <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
-                        <Divider sx={{borderColor: '#000000F0'}}></Divider>
-                      </CardContent>
+                      <CardActionArea
+                        onClick={() => handleCardInfo(task)}
+                      >
+                        <CardContent>
+                          {task.deadline ?
+                              <Typography variant="h4" sx={{ m: 1 }}>{task.deadline}</Typography>
+                              :
+                              <Typography noWrap variant="h4" sx={{ m: 1 }}>Sin fecha límite</Typography>
+                          }
+                          <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                          <Typography noWrap variant="h6" sx={{ m: 1 }}>{task.title}</Typography>
+                          <Typography noWrap variant="body1" sx={{ m: 1 }}>{task.description}</Typography>
+                          <Divider sx={{borderColor: '#000000F0'}}></Divider>
+                        </CardContent>
+                      </CardActionArea>
                       {task.state === 'Pendiente' ?
                         <CardActions sx={{ display: 'flex', justifyContent: 'space-around'}}>
                           <Button size="small" variant='contained' onClick={() => handleUpdate(task)} sx={{textTransform: 'none'}}>Editar</Button>
@@ -561,7 +601,7 @@ export default function MainContainer() {
           />
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
             <DemoContainer components={['DatePicker']}>
-              <DatePicker value={taskDue ? dayjs(taskDue, 'DD/MM/YYYY') : null} label="Día límite" onChange={(e) => setTaskDue(e ? e.format('DD/MM/YYYY') : null)}/>
+              <DatePicker value={taskDue ? dayjs(taskDue, "DD/MM/YYYY") : null} label="Día límite" onChange={(e) => setTaskDue(e ? e.format('DD/MM/YYYY') : null)}/>
             </DemoContainer>
           </LocalizationProvider>
           {addErr &&
@@ -620,6 +660,18 @@ export default function MainContainer() {
           <Button variant='contained' onClick={handleDeleteModal} sx={{textTransform: 'none', fontSize: '1rem'}}>No</Button>
         </DialogActions>
       </Dialog>
+
+      <Modal
+        open={card}
+        onClose={handleCardModal}
+      >
+        <Box sx={style}>
+          <Typography variant='h6' sx={{ m: 1, textAlign: 'center', overflowWrap: 'break-word' }}>Fecha límite: {taskDue ? taskDue : "Sin fecha límite"}</Typography>
+          <Divider sx={{borderColor: '#000000F0'}}></Divider>
+          <Typography variant='subtitle2' sx={{ m: 1, textAlign: 'center', overflowWrap: 'break-word' }}>{taskName}</Typography>
+          <Typography variant='body2' sx={{ m: 1, overflowWrap: 'break-word'}}>{taskDescription}</Typography>
+        </Box>
+      </Modal>
     </>
   )
 }
